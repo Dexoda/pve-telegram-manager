@@ -182,6 +182,30 @@ async def callback_vms_menu(callback: CallbackQuery):
     await callback.answer()
 
 
+@router.callback_query(F.data == "menu:monitoring")
+@admin_required
+async def callback_monitoring_menu(callback: CallbackQuery):
+    """Handle monitoring menu callback.
+    
+    Args:
+        callback: Callback query.
+    """
+    # This will be handled by monitoring.py router
+    await callback.answer()
+
+
+@router.callback_query(F.data == "menu:storage")
+@admin_required
+async def callback_storage_menu(callback: CallbackQuery):
+    """Handle storage menu callback.
+    
+    Args:
+        callback: Callback query.
+    """
+    # This will be handled by storage.py router
+    await callback.answer()
+
+
 @router.callback_query(F.data.startswith("menu:"))
 @admin_required
 async def callback_other_menus(callback: CallbackQuery):
@@ -193,8 +217,6 @@ async def callback_other_menus(callback: CallbackQuery):
     menu_type = callback.data.split(":")[1]
     
     menu_messages = {
-        "monitoring": "📊 *Monitoring*\n\nMonitoring features coming soon\\!",
-        "storage": "💾 *Storage*\n\nStorage management coming soon\\!",
         "finance": "⚡ *Finance*\n\nFinance calculator coming soon\\!",
         "logs": "📜 *Logs*\n\nLog viewer coming soon\\!",
         "tools": "🔧 *Tools*\n\nUtilities coming soon\\!",

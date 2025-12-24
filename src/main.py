@@ -11,8 +11,11 @@ from aiogram.enums import ParseMode
 from src.config import load_config
 from src.database import Database
 from src.services.proxmox import ProxmoxClient
+from src.services.ssh_client import SSHClient
 from src.handlers.common import router as common_router, setup_common_router
 from src.handlers.vms import router as vms_router, setup_vms_router
+from src.handlers.monitoring import router as monitoring_router, setup_monitoring_router
+from src.handlers.storage import router as storage_router, setup_storage_router
 
 
 # Configure logging
@@ -71,9 +74,24 @@ async def main():
         logger.error(f"Failed to initialize Proxmox client: {e}")
         sys.exit(1)
     
+    # Initialize SSH client
+    try:
+        ssh = SSHClient(
+            host=config.ssh.host,
+            user=config.ssh.user,
+            key_path=config.ssh.key_path,
+            port=config.ssh.port
+        )
+        logger.info("SSH client initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize SSH client: {e}")
+        sys.exit(1)
+    
     # Setup handlers with dependencies
     setup_common_router(config, db)
     setup_vms_router(config, db, proxmox)
+    setup_monitoring_router(config, db, proxmox, ssh)
+    setup_storage_router(config, db, proxmox, ssh)
     logger.info("Handlers initialized")
     
     # Initialize bot and dispatcher
@@ -83,6 +101,8 @@ async def main():
     # Register routers
     dp.include_router(common_router)
     dp.include_router(vms_router)
+    dp.include_router(monitoring_router)
+    dp.include_router(storage_router)
     logger.info("Routers registered")
     
     # Start bot
