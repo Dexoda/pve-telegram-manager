@@ -1,0 +1,6 @@
+aiogram==3.7.0
+proxmoxer==2.0.1
+requests==2.31.0
+aiosqlite==0.20.0
+asyncssh==2.14.2
+python-dotenv==1.0.1
