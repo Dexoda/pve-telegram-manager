@@ -1,7 +1,7 @@
 """Finance handler for electricity cost calculation."""
 from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message
 import logging
 
 from src.utils.formatters import escape_markdown_v2
@@ -54,9 +54,9 @@ async def calculate_cost(message: Message, config, db) -> None:
         if watts <= 0 or hours <= 0:
             await message.answer(
                 escape_markdown_v2(
-                    "❌ Ошибка: мощность и время должны быть положительными числами\n\n"
+                    f"❌ Ошибка: мощность и время должны быть положительными числами\n\n"
                     f"Получено: watts={watts}, hours={hours}\n"
-                    "Оба значения должны быть больше нуля."
+                    f"Оба значения должны быть больше нуля."
                 ),
                 parse_mode="MarkdownV2"
             )
