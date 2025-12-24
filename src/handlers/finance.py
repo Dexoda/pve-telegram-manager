@@ -25,19 +25,39 @@ async def calculate_cost(message: Message, config, db) -> None:
         args = message.text.split()[1:]
         if len(args) != 2:
             await message.answer(
-                escape_markdown_v2("❌ Использование: /cost <watts> <hours>\n"
-                               "Пример: /cost 350 720 (350W за 30 дней)"),
+                escape_markdown_v2(
+                    "❌ Использование: /cost <watts> <hours>\n\n"
+                    "Пример: /cost 350 720 (350W за 30 дней)\n\n"
+                    "Параметры:\n"
+                    "• watts - мощность в ваттах (например: 350)\n"
+                    "• hours - время в часах (например: 720 для 30 дней)"
+                ),
                 parse_mode="MarkdownV2"
             )
             return
         
-        watts = float(args[0])
-        hours = float(args[1])
+        try:
+            watts = float(args[0])
+            hours = float(args[1])
+        except ValueError:
+            await message.answer(
+                escape_markdown_v2(
+                    "❌ Ошибка: введите корректные числа\n\n"
+                    "Оба параметра должны быть числами (целыми или десятичными).\n"
+                    "Примеры: /cost 350 720 или /cost 150.5 168"
+                ),
+                parse_mode="MarkdownV2"
+            )
+            return
         
         # Validate inputs
         if watts <= 0 or hours <= 0:
             await message.answer(
-                escape_markdown_v2("❌ Ошибка: мощность и время должны быть положительными числами"),
+                escape_markdown_v2(
+                    "❌ Ошибка: мощность и время должны быть положительными числами\n\n"
+                    f"Получено: watts={watts}, hours={hours}\n"
+                    "Оба значения должны быть больше нуля."
+                ),
                 parse_mode="MarkdownV2"
             )
             return
@@ -73,14 +93,19 @@ async def calculate_cost(message: Message, config, db) -> None:
         await message.answer(response, parse_mode="MarkdownV2")
         
     except (ValueError, IndexError) as e:
-        logger.warning(f"Invalid input for /cost command: {e}")
+        logger.warning(f"Invalid input for /cost command from user {message.from_user.id}: {e}")
+        # This catch is for unexpected ValueError/IndexError that shouldn't happen
+        # due to earlier validation, but kept for safety
         await message.answer(
-            escape_markdown_v2("❌ Ошибка: введите корректные числа"),
+            escape_markdown_v2("❌ Ошибка обработки: проверьте формат ввода"),
             parse_mode="MarkdownV2"
         )
     except Exception as e:
-        logger.error(f"Error calculating cost: {e}", exc_info=True)
+        logger.error(f"Unexpected error in /cost command: {e}", exc_info=True)
         await message.answer(
-            escape_markdown_v2(f"❌ Ошибка: {str(e)}"),
+            escape_markdown_v2(
+                f"❌ Неожиданная ошибка при расчете\n\n"
+                f"Если проблема повторяется, сообщите администратору."
+            ),
             parse_mode="MarkdownV2"
         )

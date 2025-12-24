@@ -21,22 +21,6 @@ def escape_markdown_v2(text: str) -> str:
 escape_markdown = escape_markdown_v2
 
 
-def format_code_block(text: str, language: str = "") -> str:
-    """
-    Format text as a code block.
-    
-    Args:
-        text: Text to format
-        language: Programming language for syntax highlighting
-        
-    Returns:
-        Formatted code block
-    """
-    if language:
-        return f"```{language}\n{text}\n```"
-    return f"```\n{text}\n```"
-
-
 def format_inline_code(text: str) -> str:
     """
     Format text as inline code.
@@ -133,3 +117,7 @@ def truncate_text(text: str, max_length: int = 4096) -> str:
     if len(text) <= max_length:
         return text
     return text[:max_length - 3] + "..."
+
+
+# Alias for convenience (requested in requirements)
+format_code_block = format_pre
