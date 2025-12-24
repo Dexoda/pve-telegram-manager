@@ -1,0 +1,78 @@
+name: Deploy PVE Telegram Manager
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run syntax check
+        run: |
+          python -m py_compile src/*.py
+          python -m py_compile src/**/*.py
+      
+      - name: Build Docker image
+        run: |
+          docker build -t pve-telegram-bot:latest .
+      
+      - name: Save Docker image
+        run: |
+          docker save pve-telegram-bot:latest | gzip > pve-telegram-bot.tar.gz
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: pve-telegram-bot.tar.gz
+          retention-days: 7
+      
+      # Optional: Deploy to server via SSH
+      # Uncomment and configure the following steps to deploy automatically
+      
+      # - name: Deploy to server
+      #   uses: appleboy/scp-action@master
+      #   with:
+      #     host: ${{ secrets.DEPLOY_HOST }}
+      #     username: ${{ secrets.DEPLOY_USER }}
+      #     key: ${{ secrets.DEPLOY_SSH_KEY }}
+      #     source: "docker-compose.yml,.env,pve-telegram-bot.tar.gz"
+      #     target: "/opt/pve-telegram-bot"
+      
+      # - name: Start service
+      #   uses: appleboy/ssh-action@master
+      #   with:
+      #     host: ${{ secrets.DEPLOY_HOST }}
+      #     username: ${{ secrets.DEPLOY_USER }}
+      #     key: ${{ secrets.DEPLOY_SSH_KEY }}
+      #     script: |
+      #       cd /opt/pve-telegram-bot
+      #       docker load < pve-telegram-bot.tar.gz
+      #       docker-compose down
+      #       docker-compose up -d
+      
+      - name: Deployment info
+        run: |
+          echo "✅ Build completed successfully!"
+          echo "Docker image saved as artifact."
+          echo "To deploy manually:"
+          echo "1. Download the artifact"
+          echo "2. Load image: docker load < pve-telegram-bot.tar.gz"
+          echo "3. Run: docker-compose up -d"
