@@ -11,8 +11,14 @@ from aiogram.enums import ParseMode
 from src.config import config
 from src.database.db import Database
 from src.services.proxmox import ProxmoxClient
+from src.services.ssh_client import SSHClient
 from src.handlers import common
 from src.handlers import vms
+from src.handlers import monitoring
+from src.handlers import storage
+from src.handlers import finance
+from src.handlers import logs
+from src.handlers import tools
 
 # Configure logging
 logging.basicConfig(
@@ -56,9 +62,23 @@ async def main() -> None:
         else:
             logger.warning("Could not retrieve Proxmox nodes, but continuing...")
         
+        # Initialize SSH client
+        ssh_client = SSHClient(
+            host=config.SSH_HOST,
+            user=config.SSH_USER,
+            key_path=config.SSH_KEY_PATH,
+            port=config.SSH_PORT
+        )
+        logger.info("SSH client initialized successfully")
+        
         # Set database and services in handlers
         common.set_database(db)
         vms.set_services(pve_client, db)
+        monitoring.set_services(pve_client, ssh_client, db)
+        storage.set_services(pve_client, ssh_client, db)
+        finance.set_services(db)
+        logs.set_services(ssh_client, db)
+        tools.set_services(ssh_client, db)
         
         # Initialize bot and dispatcher
         bot = Bot(
@@ -71,6 +91,11 @@ async def main() -> None:
         # Register routers
         dp.include_router(common.router)
         dp.include_router(vms.router)
+        dp.include_router(monitoring.router)
+        dp.include_router(storage.router)
+        dp.include_router(finance.router)
+        dp.include_router(logs.router)
+        dp.include_router(tools.router)
         
         logger.info("Bot starting...")
         logger.info(f"Authorized admins: {config.ADMIN_IDS}")
