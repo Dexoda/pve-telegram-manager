@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  pve-telegram-bot:
+    build: .
+    container_name: pve-telegram-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - pve-network
+
+networks:
+  pve-network:
+    driver: bridge

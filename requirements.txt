@@ -1,0 +1,18 @@
+# Telegram Bot Framework
+aiogram==3.13.1
+
+# Proxmox API Client
+proxmoxer==2.0.1
+requests==2.32.3
+
+# SSH Client
+asyncssh==2.14.2
+
+# Database
+aiosqlite==0.20.0
+
+# Environment Variables
+python-dotenv==1.0.1
+
+# Utilities
+python-dateutil==2.9.0
