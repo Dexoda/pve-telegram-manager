@@ -17,6 +17,23 @@ def escape_markdown_v2(text: str) -> str:
     return ''.join(f'\\{char}' if char in special_chars else char for char in str(text))
 
 
+# Alias for convenience
+escape_markdown = escape_markdown_v2
+
+
+def format_inline_code(text: str) -> str:
+    """
+    Format text as inline code.
+    
+    Args:
+        text: Text to format
+        
+    Returns:
+        Formatted inline code
+    """
+    return f"`{text}`"
+
+
 def format_code(text: str) -> str:
     """
     Format text as inline code for Telegram.
@@ -100,3 +117,7 @@ def truncate_text(text: str, max_length: int = 4096) -> str:
     if len(text) <= max_length:
         return text
     return text[:max_length - 3] + "..."
+
+
+# Alias for convenience (requested in requirements)
+format_code_block = format_pre

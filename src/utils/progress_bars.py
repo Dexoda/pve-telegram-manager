@@ -2,6 +2,27 @@
 from typing import Union
 
 
+def progress_bar(percent: float, length: int = 10) -> str:
+    """
+    Create a progress bar.
+    
+    Args:
+        percent: Percentage value (0-100)
+        length: Length of the progress bar
+        
+    Returns:
+        Progress bar string
+    """
+    if percent > 100:
+        percent = 100
+    if percent < 0:
+        percent = 0
+    
+    filled = int(length * percent / 100)
+    bar = "█" * filled + "░" * (length - filled)
+    return f"[{bar}] {percent:.1f}%"
+
+
 def format_bytes(bytes_value: Union[int, float]) -> str:
     """
     Format bytes to human-readable format.
