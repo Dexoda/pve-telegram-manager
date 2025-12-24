@@ -92,14 +92,6 @@ async def calculate_cost(message: Message, config, db) -> None:
         
         await message.answer(response, parse_mode="MarkdownV2")
         
-    except (ValueError, IndexError) as e:
-        logger.warning(f"Invalid input for /cost command from user {message.from_user.id}: {e}")
-        # This catch is for unexpected ValueError/IndexError that shouldn't happen
-        # due to earlier validation, but kept for safety
-        await message.answer(
-            escape_markdown_v2("❌ Ошибка обработки: проверьте формат ввода"),
-            parse_mode="MarkdownV2"
-        )
     except Exception as e:
         logger.error(f"Unexpected error in /cost command: {e}", exc_info=True)
         await message.answer(
