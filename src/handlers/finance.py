@@ -2,7 +2,11 @@
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
+import logging
+
 from src.utils.formatters import escape_markdown_v2
+
+logger = logging.getLogger(__name__)
 
 router = Router()
 
@@ -29,6 +33,14 @@ async def calculate_cost(message: Message, config, db) -> None:
         
         watts = float(args[0])
         hours = float(args[1])
+        
+        # Validate inputs
+        if watts <= 0 or hours <= 0:
+            await message.answer(
+                escape_markdown_v2("❌ Ошибка: мощность и время должны быть положительными числами"),
+                parse_mode="MarkdownV2"
+            )
+            return
         
         # Calculate kWh
         kwh = (watts / 1000) * hours
@@ -60,12 +72,14 @@ async def calculate_cost(message: Message, config, db) -> None:
         
         await message.answer(response, parse_mode="MarkdownV2")
         
-    except (ValueError, IndexError):
+    except (ValueError, IndexError) as e:
+        logger.warning(f"Invalid input for /cost command: {e}")
         await message.answer(
             escape_markdown_v2("❌ Ошибка: введите корректные числа"),
             parse_mode="MarkdownV2"
         )
     except Exception as e:
+        logger.error(f"Error calculating cost: {e}", exc_info=True)
         await message.answer(
             escape_markdown_v2(f"❌ Ошибка: {str(e)}"),
             parse_mode="MarkdownV2"
