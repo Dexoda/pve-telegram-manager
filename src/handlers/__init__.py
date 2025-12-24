@@ -4,5 +4,16 @@ from .common import router as common_router
 from .vms import router as vms_router
 from .monitoring import router as monitoring_router
 from .storage import router as storage_router
+from .finance import router as finance_router
+from .logs import router as logs_router
+from .tools import router as tools_router
 
-__all__ = ["common_router", "vms_router", "monitoring_router", "storage_router"]
+__all__ = [
+    "common_router",
+    "vms_router",
+    "monitoring_router",
+    "storage_router",
+    "finance_router",
+    "logs_router",
+    "tools_router",
+]

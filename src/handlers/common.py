@@ -206,29 +206,37 @@ async def callback_storage_menu(callback: CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data.startswith("menu:"))
+@router.callback_query(F.data == "menu:finance")
 @admin_required
-async def callback_other_menus(callback: CallbackQuery):
-    """Handle other menu callbacks (placeholder).
+async def callback_finance_menu(callback: CallbackQuery):
+    """Handle finance menu callback.
     
     Args:
         callback: Callback query.
     """
-    menu_type = callback.data.split(":")[1]
+    # This will be handled by finance.py router
+    await callback.answer()
+
+
+@router.callback_query(F.data == "menu:logs")
+@admin_required
+async def callback_logs_menu(callback: CallbackQuery):
+    """Handle logs menu callback.
     
-    menu_messages = {
-        "finance": "⚡ *Finance*\n\nFinance calculator coming soon\\!",
-        "logs": "📜 *Logs*\n\nLog viewer coming soon\\!",
-        "tools": "🔧 *Tools*\n\nUtilities coming soon\\!",
-    }
+    Args:
+        callback: Callback query.
+    """
+    # This will be handled by logs.py router
+    await callback.answer()
+
+
+@router.callback_query(F.data == "menu:tools")
+@admin_required
+async def callback_tools_menu(callback: CallbackQuery):
+    """Handle tools menu callback.
     
-    text = menu_messages.get(menu_type, "Feature coming soon\\!")
-    
-    from src.keyboards.inline import get_back_button
-    
-    await callback.message.edit_text(
-        text,
-        reply_markup=get_back_button("menu:main"),
-        parse_mode="MarkdownV2"
-    )
+    Args:
+        callback: Callback query.
+    """
+    # This will be handled by tools.py router
     await callback.answer()
