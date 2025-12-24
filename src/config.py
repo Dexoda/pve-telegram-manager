@@ -36,8 +36,20 @@ class Config:
     # Database Configuration
     DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/bot.db")
     
-    # Electricity Configuration (Almaty, Kazakhstan)
-    ELECTRICITY_RATE: float = float(os.getenv("ELECTRICITY_RATE", "21.80"))
+    # Electricity Tariff (Almaty, Kazakhstan - KZT per kWh)
+    TARIFF_STEP_1: float = float(os.getenv("TARIFF_STEP_1", "23.21"))
+    TARIFF_STEP_2: float = float(os.getenv("TARIFF_STEP_2", "28.50"))
+    TARIFF_STEP_3: float = float(os.getenv("TARIFF_STEP_3", "35.00"))
+    CURRENCY: str = os.getenv("CURRENCY", "KZT")
+    
+    # Logging Configuration
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_FILE: str = os.getenv("LOG_FILE", "./data/bot_usage.log")
+    
+    # Alert Configuration
+    ALERT_HIGH_LOAD_THRESHOLD: int = int(os.getenv("ALERT_HIGH_LOAD_THRESHOLD", "90"))
+    ALERT_HIGH_LOAD_DURATION: int = int(os.getenv("ALERT_HIGH_LOAD_DURATION", "300"))
+    ALERT_CHECK_INTERVAL: int = int(os.getenv("ALERT_CHECK_INTERVAL", "60"))
     
     @classmethod
     def validate(cls) -> None:

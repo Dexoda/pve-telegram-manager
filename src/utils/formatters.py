@@ -17,6 +17,39 @@ def escape_markdown_v2(text: str) -> str:
     return ''.join(f'\\{char}' if char in special_chars else char for char in str(text))
 
 
+# Alias for convenience
+escape_markdown = escape_markdown_v2
+
+
+def format_code_block(text: str, language: str = "") -> str:
+    """
+    Format text as a code block.
+    
+    Args:
+        text: Text to format
+        language: Programming language for syntax highlighting
+        
+    Returns:
+        Formatted code block
+    """
+    if language:
+        return f"```{language}\n{text}\n```"
+    return f"```\n{text}\n```"
+
+
+def format_inline_code(text: str) -> str:
+    """
+    Format text as inline code.
+    
+    Args:
+        text: Text to format
+        
+    Returns:
+        Formatted inline code
+    """
+    return f"`{text}`"
+
+
 def format_code(text: str) -> str:
     """
     Format text as inline code for Telegram.

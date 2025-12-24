@@ -1,82 +1,72 @@
-"""Finance calculator handlers."""
+"""Finance handler for electricity cost calculation."""
 from aiogram import Router, F
-from aiogram.types import CallbackQuery
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-import logging
-
-from src.keyboards.inline import back_button
+from aiogram.filters import Command
+from aiogram.types import Message, CallbackQuery
 from src.utils.formatters import escape_markdown_v2
-
-logger = logging.getLogger(__name__)
 
 router = Router()
 
 
-class FinanceStates(StatesGroup):
-    """States for finance calculator."""
-    waiting_for_power = State()
-
-
-@router.callback_query(F.data == "menu_finance")
-async def show_finance_menu(callback: CallbackQuery, config, proxmox, db) -> None:
-    """Show finance calculator."""
+@router.message(Command("cost"))
+async def calculate_cost(message: Message, config, db) -> None:
+    """Calculate electricity cost based on Almaty tariffs."""
     try:
-        await callback.answer("Calculating...")
-        
         # Log command
         await db.log_command(
-            user_id=callback.from_user.id,
-            username=callback.from_user.username,
-            command="menu_finance"
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            command="cost"
         )
         
-        # Get all nodes
-        nodes = await proxmox.get_nodes()
+        args = message.text.split()[1:]
+        if len(args) != 2:
+            await message.answer(
+                escape_markdown_v2("❌ Использование: /cost <watts> <hours>\n"
+                               "Пример: /cost 350 720 (350W за 30 дней)"),
+                parse_mode="MarkdownV2"
+            )
+            return
         
-        text = "💰 *Electricity Cost Calculator*\n\n"
-        text += f"*Electricity Rate:* {config.ELECTRICITY_RATE} KZT/kWh \\(Almaty\\)\n\n"
+        watts = float(args[0])
+        hours = float(args[1])
         
-        if not nodes:
-            text += "No nodes found to calculate costs\\."
+        # Calculate kWh
+        kwh = (watts / 1000) * hours
+        
+        # Progressive tariff calculation (Almaty)
+        tariff_1 = config.TARIFF_STEP_1
+        tariff_2 = config.TARIFF_STEP_2
+        tariff_3 = config.TARIFF_STEP_3
+        currency = config.CURRENCY
+        
+        if kwh <= 150:
+            cost = kwh * tariff_1
+        elif kwh <= 300:
+            cost = 150 * tariff_1 + (kwh - 150) * tariff_2
         else:
-            total_power_estimate = 0
-            
-            for node_info in nodes:
-                node = node_info['node']
-                
-                # Get VMs on node
-                vms = await proxmox.get_vms(node)
-                running_vms = [vm for vm in vms if vm.get('status') == 'running']
-                
-                # Estimate power consumption
-                # Rough estimate: Base system 50W + 10W per running VM
-                node_power = 50 + (len(running_vms) * 10)
-                total_power_estimate += node_power
-                
-                text += f"*Node:* {escape_markdown_v2(node)}\n"
-                text += f"  Running VMs: {len(running_vms)}\n"
-                text += f"  Estimated Power: ~{node_power}W\n\n"
-            
-            # Calculate costs
-            daily_kwh = (total_power_estimate * 24) / 1000
-            daily_cost = daily_kwh * config.ELECTRICITY_RATE
-            monthly_cost = daily_cost * 30
-            yearly_cost = daily_cost * 365
-            
-            text += "*Estimated Costs:*\n"
-            text += f"Power Consumption: ~{total_power_estimate}W\n"
-            text += f"Daily: {daily_kwh:.2f} kWh = {daily_cost:.2f} KZT\n"
-            text += f"Monthly: {daily_kwh * 30:.2f} kWh = {monthly_cost:.2f} KZT\n"
-            text += f"Yearly: {daily_kwh * 365:.2f} kWh = {yearly_cost:.2f} KZT\n\n"
-            text += "_Note: These are rough estimates\\. Actual power consumption may vary\\._"
+            cost = 150 * tariff_1 + 150 * tariff_2 + (kwh - 300) * tariff_3
         
-        await callback.message.edit_text(
-            text,
-            reply_markup=back_button("menu_main"),
+        response = (
+            f"💰 *Калькулятор электроэнергии*\n\n"
+            f"⚡ Мощность: {watts} Вт\n"
+            f"⏱ Время: {hours} ч \\({hours/24:.1f} дней\\)\n"
+            f"📊 Потребление: {kwh:.2f} кВт⋅ч\n\n"
+            f"💵 *Стоимость:* {cost:.2f} {currency}\n\n"
+            f"_Тарифы Алматы \\(2025\\):_\n"
+            f"• 0\\-150 кВт⋅ч: {tariff_1} {currency}\n"
+            f"• 150\\-300 кВт⋅ч: {tariff_2} {currency}\n"
+            f"• 300\\+ кВт⋅ч: {tariff_3} {currency}"
+        )
+        
+        await message.answer(response, parse_mode="MarkdownV2")
+        
+    except (ValueError, IndexError):
+        await message.answer(
+            escape_markdown_v2("❌ Ошибка: введите корректные числа"),
             parse_mode="MarkdownV2"
         )
-        
     except Exception as e:
-        logger.error(f"Error showing finance calculator: {e}", exc_info=True)
-        await callback.answer("Error calculating costs", show_alert=True)
+        await message.answer(
+            escape_markdown_v2(f"❌ Ошибка: {str(e)}"),
+            parse_mode="MarkdownV2"
+        )
