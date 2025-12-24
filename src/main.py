@@ -12,6 +12,7 @@ from src.config import config
 from src.database.db import Database
 from src.services.proxmox import ProxmoxClient
 from src.services.ssh_client import SSHClient
+from src.services.alerts import AlertService
 from src.handlers import common
 from src.handlers import vms
 from src.handlers import monitoring
@@ -97,11 +98,20 @@ async def main() -> None:
         dp.include_router(logs.router)
         dp.include_router(tools.router)
         
+        # Initialize alert service
+        alert_service = AlertService(bot, pve_client)
+        await alert_service.start()
+        
         logger.info("Bot starting...")
         logger.info(f"Authorized admins: {config.ADMIN_IDS}")
         
-        # Start polling
-        await dp.start_polling(bot)
+        try:
+            # Start polling
+            await dp.start_polling(bot)
+        finally:
+            # Stop alert service on shutdown
+            await alert_service.stop()
+            logger.info("Bot shutdown complete")
         
     except ValueError as e:
         logger.error(f"Configuration error: {e}")
